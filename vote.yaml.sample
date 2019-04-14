@@ -41,4 +41,9 @@ polls:
         writein: True
         options:
             - Nicholas Lantz
-
+    editor:
+        ranked: True
+        options:
+            - Emacs
+            - Vim
+            - VSCode
