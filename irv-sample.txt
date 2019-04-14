@@ -1,0 +1,27 @@
+Stage 1:
+========
+Vim:    ##########
+Emacs:  #######
+XEmacs: #####
+Neovim: #
+
+Stage 2:
+========
+Vim:    ########### (+1)
+Emacs:  #######
+XEmacs: #####
+Neovim: 4th
+
+Stage 3:
+========
+Emacs:  ############ (+4)
+Vim:    ###########
+XEmacs: 3rd
+Neovim: 4th
+
+Results:
+========
+Emacs:  1st
+Vim:    2nd
+XEmacs: 3rd
+Neovim: 4th
