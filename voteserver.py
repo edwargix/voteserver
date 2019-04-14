@@ -1,21 +1,23 @@
 import io
 import socketserver
-import yaml
 import readline
 import sys
 from threading import Thread, RLock, current_thread
 from datetime import datetime
 from queue import Queue
 from collections import defaultdict, OrderedDict
+import yaml
+
 
 vote_q = Queue()
 login_q = Queue()
-
 open_polls = []
 config_fn = sys.argv[2] if len(sys.argv) > 2 else 'vote.yaml'
 
+
 with open(config_fn) as f:
     config = yaml.load(f)
+
 
 logging_lock = RLock()
 def log(*args, date=True, **kwargs):
@@ -26,8 +28,10 @@ def log(*args, date=True, **kwargs):
         readline.redisplay()
         sys.stderr.flush()
 
+
 class ShutdownMessage:
     pass
+
 
 class LoginProcessor(Thread):
     def __init__(self):
@@ -45,9 +49,10 @@ class LoginProcessor(Thread):
             self.next_id += 1
             login_q.task_done()
 
+
 class VoteProcessor(Thread):
     def __init__(self):
-        self.votes = defaultdict(lambda :defaultdict(int))
+        self.votes = defaultdict(lambda: defaultdict(int))
         super().__init__()
 
     def run(self):
@@ -55,6 +60,7 @@ class VoteProcessor(Thread):
             vote = vote_q.get()
             self.votes[vote[0]][vote[1]] += 1
             vote_q.task_done()
+
 
 class ClientConnectionHandler(socketserver.StreamRequestHandler):
     def message(self, msg):
@@ -167,10 +173,12 @@ class ClientConnectionHandler(socketserver.StreamRequestHandler):
             print(config['banner'], end='', file=self.out)
         self.out.flush()
 
+
 commands = {}
 def command(f):
     commands[f.__name__] = f
     return f
+
 
 @command
 def exit():
@@ -181,6 +189,7 @@ def exit():
     server.shutdown()
     server.server_close()
     sys.exit()
+
 
 @command
 def kick(client_id):
@@ -194,10 +203,12 @@ def kick(client_id):
     except KeyError:
         log('kick: client id unknown', date=False)
 
+
 @command
 def who():
     for client_id, th in lp.clients.items():
         log('{} ({})'.format(client_id, th.name), date=False)
+
 
 @command
 def vote(name):
@@ -209,10 +220,12 @@ def vote(name):
     for th in lp.clients.values():
         th.poll_q.put(name)
 
+
 @command
 def close(name):
     global open_polls
     open_polls = [p for p in open_polls if p != name]
+
 
 _list = list
 @command
@@ -220,6 +233,7 @@ def list():
     for k in config['polls'].keys():
         log(k, date=False)
 list = _list
+
 
 @command
 def results(name):
@@ -270,16 +284,18 @@ def results(name):
     for opt, votes in vp.votes[name].items():
         log("{} - {} votes ({}%)".format(opt, votes, votes/total * 100 if opt != 'ABSTAIN' else 0.0), date=False)
 
+
 @command
 def options(name):
     if name not in config['polls'].keys():
         log("Unknown poll '{}'".format(name), date=False)
         return
     if 'options' not in config['polls'][name].keys():
-        log("Poll has no options".format(name), date=False)
+        log("Poll has no options", date=False)
         return
     for i, opti in enumerate(config['polls'][name]['options']):
         log(i + 1, opti)
+
 
 @command
 def rmopt(name, index):
@@ -287,7 +303,7 @@ def rmopt(name, index):
         log("Unknown poll '{}'".format(name), date=False)
         return
     if 'options' not in config['polls'][name].keys():
-        log("Poll has no options".format(name), date=False)
+        log("Poll has no options", date=False)
         return
     index = int(index)
     if not 1 <= index <= len(config['polls'][name]['options']):
@@ -295,11 +311,13 @@ def rmopt(name, index):
         return
     del config['polls'][name]['options'][index - 1]
 
+
 @command
 def revote(name):
     close(name)
     del vp.votes[name]
     vote(name)
+
 
 if __name__ == '__main__':
     lp = LoginProcessor()
@@ -322,4 +340,3 @@ if __name__ == '__main__':
                 commands[cmd[0]](*cmd[1:])
             except Exception as e:
                 log("Error processing directive: {}".format(e), date=False)
-
