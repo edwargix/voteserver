@@ -269,6 +269,9 @@ def results(name):
         # stage index
         stagei = 1
 
+        # records increments of FVPs for candidates between stages
+        incs = {}
+
         while candidates:
             # sort by count of first-place votes (first to last)
             candidates = OrderedDict(sorted(candidates.items(), key=lambda x:
@@ -279,7 +282,8 @@ def results(name):
             log(f'Stage {stagei}:', date=False)
             log('========', date=False)
             for c in candidates:
-                log(f'{c}:'.ljust(maxcand), '#' * candidates[c][0], date=False)
+                log(f'{c}:'.ljust(maxcand), '#' * candidates[c][0],
+                    f'(+{incs[c]})' if c in incs else '', date=False)
             for i, cands in enumerate(elim):
                 if cands:
                     for c in cands:
@@ -305,6 +309,7 @@ def results(name):
             elim[len(candidates.keys()) + len(losers) - 1] = [l[0] for l in losers]
 
             # distribute each losing candidate's vote to the vote's next best candidate
+            incs = {}
             for loser in losers:
                 for count, seq in loser[1][1:]:
                     alt = next((seq[i:] for i in range(len(seq))
@@ -312,6 +317,7 @@ def results(name):
                     if alt:
                         candidates[alt[0]][0] += count
                         candidates[alt[0]].append((count, alt[1:]))
+                        incs[alt[0]] = count
 
         # print final results
         log('Results', date=False)
