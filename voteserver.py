@@ -252,6 +252,7 @@ def results(name):
         for c in config['polls'][name]['options']:
             candidates[c] = [0]
         # TODO: check that len(candidates) > 0 and handle error
+
         # insert votes
         for seq, count in vp.votes[name].items():
             if seq[0] == 'ABSTAIN':
@@ -262,9 +263,11 @@ def results(name):
         # get maximum candidate name length (used for spacing later on)
         maxcand = max(len(c) for c in candidates.keys()) + 1
 
-        standings = [None] * len(candidates.keys())
+        # list of eliminated candidates; index signifies ending position
+        elim = [None] * len(candidates.keys())
 
-        stagei = 1      # stage index
+        # stage index
+        stagei = 1
 
         while candidates:
             # sort by count of first-place votes (first to last)
@@ -277,7 +280,7 @@ def results(name):
             log('========', date=False)
             for c in candidates:
                 log(f'{c}:'.ljust(maxcand), '#' * candidates[c][0], date=False)
-            for i, cands in enumerate(standings):
+            for i, cands in enumerate(elim):
                 if cands:
                     for c in cands:
                         log(f'{f"{c}:".ljust(maxcand)} {i+1}th', date=False)
@@ -299,7 +302,7 @@ def results(name):
                 candidates[p[0]] = p[1]  # reinsert non-loser
 
             # eliminate losers
-            standings[len(candidates.keys()) + len(losers) - 1] = [l[0] for l in losers]
+            elim[len(candidates.keys()) + len(losers) - 1] = [l[0] for l in losers]
 
             # distribute each losing candidate's vote to the vote's next best candidate
             for loser in losers:
