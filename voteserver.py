@@ -106,11 +106,12 @@ class ClientConnectionHandler(socketserver.StreamRequestHandler):
                     break
             vote_q.put((poll_name, response))
         elif 'options' in poll.keys():
+            options = poll['options']
             writein = 'writein' in poll.keys() and poll['writein']
             # if a poll is both ranked and multichoiced, it is assumed that ranked is desired
             ranked = 'ranked' in poll.keys() and poll['ranked']
             multichoice = 'multichoice' in poll.keys() and poll['multichoice'] # aka approval voting
-            for i, opti in enumerate(poll['options']):
+            for i, opti in enumerate(options):
                 print("    {}) {}".format(i + 1, opti), file=self.out)
             print(file=self.out)
             if ranked:
@@ -144,8 +145,8 @@ class ClientConnectionHandler(socketserver.StreamRequestHandler):
                 for i in range(len(aline)):
                     try:
                         aline[i] = int(aline[i])
-                        if 1 <= aline[i] <= len(poll['options']):
-                            aline[i] = poll['options'][aline[i] - 1]
+                        if 1 <= aline[i] <= len(options):
+                            aline[i] = options[aline[i] - 1]
                         else:
                             break
                     except ValueError:
