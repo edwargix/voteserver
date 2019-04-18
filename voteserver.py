@@ -248,6 +248,15 @@ def results(name):
         return
 
     if 'ranked' in config['polls'][name] and config['polls'][name]['ranked']:
+        def nth(n):
+            s = str(n)
+            if s[-1] == '1':
+                return f'{s}st'
+            if s[-1] == '2':
+                return f'{s}nd'
+            if s[-1] == '3':
+                return f'{s}rd'
+            return f'{s}th'
         # maps a candidates to a list in which the 1st element is the count of
         # the candidate's 1st-place votes and the remaining elements are tuples
         # where the 1st element is a count of a sequence and the 2nd element is
@@ -295,7 +304,7 @@ def results(name):
             for i, cands in enumerate(elim):
                 if cands:
                     for c in cands:
-                        log(f'{f"{c}:".ljust(maxcand)} {i+1}th')
+                        log(f'{f"{c}:".ljust(maxcand)} {nth(i+1)}')
             log()  # newline
             stagei += 1
 
