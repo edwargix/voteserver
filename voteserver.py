@@ -135,9 +135,6 @@ class ClientConnectionHandler(socketserver.StreamRequestHandler):
                     # occurence)
                     aline = list(OrderedDict.fromkeys(filter(lambda x: x != '',
                                                              [r.strip() for r in line.split(',')])))
-                    if 'ABSTAIN' in aline and len(aline) > 1:
-                        print('You cannot include ABSTAIN in a ranked vote. Try again', file=self.out)
-                        continue
                 elif multichoice:
                     aline = list(set(r.strip() for r in line.split(',')))
                 else:
@@ -148,11 +145,14 @@ class ClientConnectionHandler(socketserver.StreamRequestHandler):
                         if 1 <= aline[i] <= len(options):
                             aline[i] = options[aline[i] - 1]
                         else:
+                            print(f'Invald number: {aline[i]}', file=self.out)
                             break
                     except ValueError:
                         if not (writein or aline[i] == 'ABSTAIN'):
+                            print('Write-ins are not allowed in this poll', file=self.out)
                             break
                         if aline[i] == 'ABSTAIN' and len(aline) > 1:
+                            print('ABSTAIN is not a valid candidate; type just "ABSTAIN" if you wish to not vote', file=self.out)
                             break
                 else:
                     break
