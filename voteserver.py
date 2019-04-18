@@ -20,7 +20,7 @@ with open(config_fn) as f:
 
 
 logging_lock = RLock()
-def log(*args, date=True, **kwargs):
+def log(*args, date=False, **kwargs):
     with logging_lock:
         print('\r        \r' + (str(datetime.now()) if date else ''), end='')
         print(*args, **kwargs)
@@ -43,7 +43,8 @@ class LoginProcessor(Thread):
         while True:
             th = login_q.get()
             self.clients[self.next_id] = th
-            log("{} ({}) registered to vote!".format(self.next_id, th.name))
+            log("{} ({}) registered to vote!".format(self.next_id, th.name),
+                date=True)
             for poll in open_polls:
                 th.poll_q.put(poll)
             self.next_id += 1
@@ -196,26 +197,26 @@ def exit():
 def kick(client_id):
     try:
         th = lp.clients.pop(int(client_id))
-        log('Kicking {} ({})...'.format(client_id, th.name))
+        log('Kicking {} ({})...'.format(client_id, th.name), date=True)
         th.poll_q.put(ShutdownMessage)
         th.join()
     except ValueError:
-        log('kick: client id must be an integer', date=False)
+        log('kick: client id must be an integer')
     except KeyError:
-        log('kick: client id unknown', date=False)
+        log('kick: client id unknown')
 
 
 @command
 def who():
     for client_id, th in lp.clients.items():
-        log('{} ({})'.format(client_id, th.name), date=False)
+        log('{} ({})'.format(client_id, th.name))
 
 
 @command
 def vote(name):
     global open_polls
     if name not in config['polls'].keys():
-        log("Unknown poll '{}'".format(name), date=False)
+        log("Unknown poll '{}'".format(name))
         return
     open_polls.append(name)
     for th in lp.clients.values():
@@ -232,14 +233,14 @@ _list = list
 @command
 def list():
     for k in config['polls'].keys():
-        log(k, date=False)
+        log(k)
 list = _list
 
 
 @command
 def results(name):
     if name not in config['polls'].keys():
-        log("Unknown poll '{}'".format(name), date=False)
+        log("Unknown poll '{}'".format(name))
         return
 
     if 'ranked' in config['polls'][name] and config['polls'][name]['ranked']:
@@ -279,16 +280,16 @@ def results(name):
 
 
             # print stage
-            log(f'Stage {stagei}:', date=False)
-            log('========', date=False)
+            log(f'Stage {stagei}:')
+            log('========')
             for c in candidates:
                 log(f'{c}:'.ljust(maxcand), '#' * candidates[c][0],
-                    f'(+{incs[c]})' if c in incs else '', date=False)
+                    f'(+{incs[c]})' if c in incs else '')
             for i, cands in enumerate(elim):
                 if cands:
                     for c in cands:
-                        log(f'{f"{c}:".ljust(maxcand)} {i+1}th', date=False)
-            log(date=False)  # newline
+                        log(f'{f"{c}:".ljust(maxcand)} {i+1}th')
+            log()  # newline
             stagei += 1
 
             # get losers for round
@@ -320,28 +321,28 @@ def results(name):
                         incs[alt[0]] = count
 
         # print final results
-        log('Results', date=False)
-        log('=======', date=False)
+        log('Results')
+        log('=======')
         for i, cands in enumerate(elim):
             if cands:
                 for c in cands:
-                    log(f'{f"{c}:".ljust(maxcand)} {i+1}th', date=False)
-        log(date=False)  # newline
+                    log(f'{f"{c}:".ljust(maxcand)} {i+1}th')
+        log()  # newline
 
         return
 
     total = sum(votes for opt, votes in vp.votes[name].items() if opt != 'ABSTAIN')
     for opt, votes in vp.votes[name].items():
-        log("{} - {} votes ({}%)".format(opt, votes, votes/total * 100 if opt != 'ABSTAIN' else 0.0), date=False)
+        log("{} - {} votes ({}%)".format(opt, votes, votes/total * 100 if opt != 'ABSTAIN' else 0.0))
 
 
 @command
 def options(name):
     if name not in config['polls'].keys():
-        log("Unknown poll '{}'".format(name), date=False)
+        log("Unknown poll '{}'".format(name))
         return
     if 'options' not in config['polls'][name].keys():
-        log("Poll has no options", date=False)
+        log("Poll has no options")
         return
     for i, opti in enumerate(config['polls'][name]['options']):
         log(i + 1, opti)
@@ -350,14 +351,14 @@ def options(name):
 @command
 def rmopt(name, index):
     if name not in config['polls'].keys():
-        log("Unknown poll '{}'".format(name), date=False)
+        log("Unknown poll '{}'".format(name))
         return
     if 'options' not in config['polls'][name].keys():
-        log("Poll has no options", date=False)
+        log("Poll has no options")
         return
     index = int(index)
     if not 1 <= index <= len(config['polls'][name]['options']):
-        log("Option not in range", date=False)
+        log("Option not in range")
         return
     del config['polls'][name]['options'][index - 1]
 
