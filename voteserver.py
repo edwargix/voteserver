@@ -125,6 +125,9 @@ class ClientConnectionHandler(socketserver.StreamRequestHandler):
                 line = self.rfile.readline().decode('utf-8').strip()
                 if not line:
                     continue
+                if not line.isprintable():
+                    print('Numbers, letters, whitespace, and valid punctuation only, please', file=self.out)
+                    continue
                 if ranked:
                     # splits the line by commas, then strips, then removes empty
                     # strings, then removes duplicates (keeping leftmost
