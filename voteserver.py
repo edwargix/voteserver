@@ -247,41 +247,64 @@ def results(name):
         # the candidate's 1st-place votes and the remaining elements are tuples
         # where the 1st element is a count of a sequence and the 2nd element is
         # the sequence itself
-        candidates = defaultdict(lambda: [0])
-
+        # couldn't figure out a clean way to use defaultdict
+        candidates = {}
+        for c in config['polls'][name]['options']:
+            candidates[c] = [0]
+        # TODO: check that len(candidates) > 0 and handle error
+        # insert votes
         for seq, count in vp.votes[name].items():
             if seq[0] == 'ABSTAIN':
                 continue
             candidates[seq[0]][0] += count
             candidates[seq[0]].append((count, seq[1:]))
 
-        standings = []  # reverse order: last place to first place
+        # get maximum candidate name length (used for spacing later on)
+        maxcand = max(len(c) for c in candidates.keys()) + 1
+
+        standings = [None] * len(candidates.keys())
+
+        stagei = 1      # stage index
 
         while candidates:
-            # sort by count of first-place votes
-            candidates = OrderedDict(sorted(candidates.items(), key=lambda x: x[1][0]))
+            # sort by count of first-place votes (first to last)
+            candidates = OrderedDict(sorted(candidates.items(), key=lambda x:
+                                            x[1][0], reverse=True))
 
-            # eliminate candidate with least amount of first-place votes
-            loser = candidates.popitem(last=False)
-            standings.append((loser,))  # tuple so candidates can tie
+            # ranking of candidates (grouping for ties)
+            rankings = [list()]
 
-            # eliminate candidates whose score is the same as the loser's (tie)
-            while next((v[0] for v in candidates.values()), None) == loser[1][0]:
-                standings[-1] += (candidates.popitem(last=False),)
+            # most recent number of first-place votes
+            fpv = next(v[0] for v in candidates.values())
+            for c in candidates:
+                if candidates[c][0] == fpv:
+                    rankings[-1].append(c)
+                else:
+                    rankings.append([c])
+                    fpv = candidates[c][0]
+
+            # print stage
+            log(f'Stage {stagei}:', date=False)
+            log('========', date=False)
+            for rank in rankings:
+                for c in rank:
+                    log(f'{c}:'.ljust(maxcand), '#' * candidates[c][0], date=False)
+            for i, cands in enumerate(standings):
+                if cands:
+                    for c in cands:
+                        log(f'{f"{c}:".ljust(maxcand)} {i+1}th', date=False)
+            log(date=False)  # newline
+            stagei += 1
 
             # distribute each losing candidate's vote to the vote's next best candidate
-            for loser in standings[-1]:
-                for count, seq in loser[1][1:]:
+            for loser in rankings[-1]:
+                for count, seq in candidates.pop(loser)[1:]:
                     alt = next((seq[i:] for i in range(len(seq))
                                 if seq[i] in candidates.keys()), None)
                     if alt:
                         candidates[alt[0]][0] += count
                         candidates[alt[0]].append((count, alt[1:]))
 
-        for rank, cands in enumerate(standings[::-1]):
-            for cand in cands:
-                log("{}. {}".format(rank + 1, cand[0]), date=False)
-        log("All unranked candidates tied for last place", date=False)
         return
 
     total = sum(votes for opt, votes in vp.votes[name].items() if opt != 'ABSTAIN')
