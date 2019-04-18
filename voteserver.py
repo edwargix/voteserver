@@ -342,7 +342,7 @@ def results(name):
         for i, cands in enumerate(elim):
             if cands:
                 for c in cands:
-                    log(f'{f"{c}:".ljust(maxcand)} {i+1}th')
+                    log(f'{f"{c}:".ljust(maxcand)} {nth(i+1)}')
         log()  # newline
 
         return
