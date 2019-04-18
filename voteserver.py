@@ -126,7 +126,8 @@ class ClientConnectionHandler(socketserver.StreamRequestHandler):
                     continue
                 if ranked:
                     # splits the line by commas, then strips, then removes empty
-                    # strings, then removes duplicates (keeping leftmost occurence)
+                    # strings, then removes duplicates (keeping leftmost
+                    # occurence)
                     aline = list(OrderedDict.fromkeys(filter(lambda x: x != '',
                                                              [r.strip() for r in line.split(',')])))
                     if 'ABSTAIN' in aline and len(aline) > 1:
@@ -240,6 +241,7 @@ def results(name):
     if name not in config['polls'].keys():
         log("Unknown poll '{}'".format(name), date=False)
         return
+
     if 'ranked' in config['polls'][name] and config['polls'][name]['ranked']:
         # maps a candidates to a list in which the 1st element is the count of
         # the candidate's 1st-place votes and the remaining elements are tuples
@@ -270,7 +272,8 @@ def results(name):
             # distribute each losing candidate's vote to the vote's next best candidate
             for loser in standings[-1]:
                 for count, seq in loser[1][1:]:
-                    alt = next((seq[i:] for i in range(len(seq)) if seq[i] in candidates.keys()), None)
+                    alt = next((seq[i:] for i in range(len(seq))
+                                if seq[i] in candidates.keys()), None)
                     if alt:
                         candidates[alt[0]][0] += count
                         candidates[alt[0]].append((count, alt[1:]))
@@ -280,6 +283,7 @@ def results(name):
                 log("{}. {}".format(rank + 1, cand[0]), date=False)
         log("All unranked candidates tied for last place", date=False)
         return
+
     total = sum(votes for opt, votes in vp.votes[name].items() if opt != 'ABSTAIN')
     for opt, votes in vp.votes[name].items():
         log("{} - {} votes ({}%)".format(opt, votes, votes/total * 100 if opt != 'ABSTAIN' else 0.0), date=False)
