@@ -271,24 +271,12 @@ def results(name):
             candidates = OrderedDict(sorted(candidates.items(), key=lambda x:
                                             x[1][0], reverse=True))
 
-            # ranking of candidates (grouping for ties)
-            rankings = [list()]
-
-            # most recent number of first-place votes
-            fpv = next(v[0] for v in candidates.values())
-            for c in candidates:
-                if candidates[c][0] == fpv:
-                    rankings[-1].append(c)
-                else:
-                    rankings.append([c])
-                    fpv = candidates[c][0]
 
             # print stage
             log(f'Stage {stagei}:', date=False)
             log('========', date=False)
-            for rank in rankings:
-                for c in rank:
-                    log(f'{c}:'.ljust(maxcand), '#' * candidates[c][0], date=False)
+            for c in candidates:
+                log(f'{c}:'.ljust(maxcand), '#' * candidates[c][0], date=False)
             for i, cands in enumerate(standings):
                 if cands:
                     for c in cands:
@@ -296,9 +284,26 @@ def results(name):
             log(date=False)  # newline
             stagei += 1
 
+            # get losers for round
+            losers = []
+            p = candidates.popitem()
+            losers.append(p)
+            fpv = p[1][0]  # number of first place votes
+
+            # every other candidate that tied with the loser is also a loser
+            if len(candidates) > 1:
+                p = candidates.popitem()
+                while p[1][0] == fpv:
+                    losers.append(p)
+                    p = candidates.popitem()
+                candidates[p[0]] = p[1]  # reinsert non-loser
+
+            # eliminate losers
+            standings[len(candidates.keys()) + len(losers) - 1] = [l[0] for l in losers]
+
             # distribute each losing candidate's vote to the vote's next best candidate
-            for loser in rankings[-1]:
-                for count, seq in candidates.pop(loser)[1:]:
+            for loser in losers:
+                for count, seq in loser[1][1:]:
                     alt = next((seq[i:] for i in range(len(seq))
                                 if seq[i] in candidates.keys()), None)
                     if alt:
