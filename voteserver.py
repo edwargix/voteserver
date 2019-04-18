@@ -313,6 +313,15 @@ def results(name):
                         candidates[alt[0]][0] += count
                         candidates[alt[0]].append((count, alt[1:]))
 
+        # print final results
+        log('Results', date=False)
+        log('=======', date=False)
+        for i, cands in enumerate(elim):
+            if cands:
+                for c in cands:
+                    log(f'{f"{c}:".ljust(maxcand)} {i+1}th', date=False)
+        log(date=False)  # newline
+
         return
 
     total = sum(votes for opt, votes in vp.votes[name].items() if opt != 'ABSTAIN')
