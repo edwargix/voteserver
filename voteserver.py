@@ -262,6 +262,9 @@ def results(name):
         for seq, count in vp.votes[name].items():
             if seq[0] == 'ABSTAIN':
                 continue
+            for c in seq:
+                if c not in candidates:
+                    candidates[c] = [0]
             candidates[seq[0]][0] += count
             candidates[seq[0]].append((count, seq[1:]))
 
