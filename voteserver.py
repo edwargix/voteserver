@@ -314,7 +314,7 @@ def results(name):
                 candidates[p[0]] = p[1]  # reinsert non-loser
 
             # eliminate losers
-            elim[len(candidates.keys()) + len(losers) - 1] = [l[0] for l in losers]
+            elim[len(candidates.keys())] = [l[0] for l in losers]
 
             # distribute each losing candidate's vote to the vote's next best candidate
             incs = {}
